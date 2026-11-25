@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://canary-ci.dev/schemas/v1/config.schema.json",
+  "title": "CanaryConfig",
+  "description": "Root project configuration schema for canary.yaml",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "adapter"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1"
+    },
+    "project_name": {
+      "type": "string",
+      "default": "default-agent"
+    },
+    "seed": {
+      "type": "string",
+      "default": "canary-default-seed-v1",
+      "description": "Master HMAC seed for reproducible canary token generation"
+    },
+    "concurrency": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 64,
+      "default": 4
+    },
+    "trials": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 1,
+      "description": "Number of trials per scenario for statistical reliability (Phase 2)"
+    },
+    "artifacts_dir": {
+      "type": "string",
+      "default": ".canary"
+    },
+    "scenario_paths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["builtin:phase1_core"]
+    },
+    "mock_profile_paths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "include_tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "exclude_tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "adapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["scripted", "litellm", "http", "cli", "python", "playwright"]
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["benign", "compromised"],
+          "default": "benign",
+          "description": "Used only when kind == 'scripted'"
+        },
+        "model": {
+          "type": "string",
+          "description": "LiteLLM model string, e.g. openai/gpt-4.1-mini or anthropic/claude-3-7-sonnet"
+        },
+        "system_prompt": {
+          "type": "string"
+        },
+        "system_prompt_file": {
+          "type": "string"
+        },
+        "temperature": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 2.0,
+          "default": 0.0
+        },
+        "endpoint_url": {
+          "type": "string",
+          "description": "Target webhook URL when kind == 'http'"
+        },
+        "command": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Subprocess argv when kind == 'cli'"
+        },
+        "pass_env": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "callable_path": {
+          "type": "string",
+          "description": "Import path module.sub:func when kind == 'python'"
+        },
+        "timeout_seconds": {
+          "type": "number",
+          "minimum": 1.0,
+          "maximum": 600.0,
+          "default": 60.0
+        }
+      }
+    },
+    "defense_proxy": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional BYOD MCP firewall or policy webhook wrapper (Phase 2)",
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["webhook_policy", "mcp_command_wrapper"]
+        },
+        "policy_url": { "type": "string" },
+        "command": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "fail_closed": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fail_on_severity": {
+          "type": "string",
+          "enum": ["critical", "high", "medium", "low"],
+          "default": "low"
+        },
+        "max_breach_rate": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.0
+        },
+        "fail_on_new_regressions_only": {
+          "type": "boolean",
+          "default": false
+        },
+        "waivers": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["scenario_id", "owner", "reason", "expires_at"],
+            "properties": {
+              "scenario_id": { "type": "string" },
+              "owner": { "type": "string" },
+              "reason": { "type": "string", "minLength": 10 },
+              "expires_at": {
+                "type": "string",
+                "format": "date",
+                "description": "Mandatory ISO-8601 expiration date YYYY-MM-DD"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

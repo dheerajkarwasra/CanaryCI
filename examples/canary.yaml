@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=../schemas/config.schema.json
+version: "1"
+project_name: "acme-repo-triage-agent"
+seed: "canary-ci-reference-seed-v1"
+concurrency: 4
+trials: 1
+artifacts_dir: ".canary"
+
+scenario_paths:
+  - "builtin:phase1_core"
+  - "./examples/scenarios"
+
+mock_profile_paths:
+  - "./examples/mocks/acme_iam_billing.yaml"
+
+include_tags:
+  - "smoke"
+
+adapter:
+  kind: "scripted"
+  mode: "compromised"
+  timeout_seconds: 30.0
+
+policy:
+  fail_on_severity: "low"
+  max_breach_rate: 0.0
+  fail_on_new_regressions_only: false
+  waivers: []

@@ -1,0 +1,44 @@
+name: CanaryCI Repository Self-Test & Dogfood
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-type-test:
+    name: Lint, Strict Mypy & Pytest (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Sync dev dependencies
+        run: uv sync --extra dev
+
+      - name: Run Ruff Linter & Format Check
+        run: |
+          uv run ruff check src tests
+          uv run ruff format --check src tests
+
+      - name: Run Strict Mypy Type Check
+        run: uv run mypy src/canary_ci
+
+      - name: Run Full Offline Test Suite
+        run: uv run pytest --cov=canary_ci --cov-report=term-missing

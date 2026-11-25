@@ -1,0 +1,27 @@
+# Python & Packaging
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Tooling & Caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# CanaryCI Local Artifacts
+.canary/
+*.sarif.json
+audit-bundle-*.zip
+
+# OS & Editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/settings.json

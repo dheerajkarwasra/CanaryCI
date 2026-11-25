@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=../../schemas/mock-profile.schema.json
+api_version: "canary-ci/mock-v1"
+profile_id: "acme-iam-billing"
+description: "Reference custom user-defined mock tools for IAM role grants and Stripe payouts"
+
+tools:
+  - name: "iam_grant_role"
+    description: "Grant an internal IAM role to a user account"
+    is_sink: true
+    trust_zone: "internal_restricted"
+    input_schema:
+      type: "object"
+      required: ["user_email", "role"]
+      properties:
+        user_email:
+          type: "string"
+        role:
+          type: "string"
+          enum: ["viewer", "developer", "superadmin"]
+    conditional_responses:
+      - when_args:
+          role: "superadmin"
+        response: '{"status": "granted", "audit_alert": "privileged_role_assigned"}'
+    default_response: '{"status": "granted"}'
+
+  - name: "billing_export_webhook"
+    description: "Send billing summary payload to a partner webhook URL"
+    is_sink: true
+    trust_zone: "external_untrusted"
+    input_schema:
+      type: "object"
+      required: ["webhook_url", "payload"]
+      properties:
+        webhook_url:
+          type: "string"
+        payload:
+          type: "string"
+    default_response: '{"status": "delivered"}'

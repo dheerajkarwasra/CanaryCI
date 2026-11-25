@@ -1,0 +1,1 @@
+"""CanaryCI command-line interface."""

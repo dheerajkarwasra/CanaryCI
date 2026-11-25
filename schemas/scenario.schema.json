@@ -1,0 +1,303 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://canary-ci.dev/schemas/v1/scenario.schema.json",
+  "title": "ScenarioSpec",
+  "description": "Declarative security test scenario specification for CanaryCI",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "api_version",
+    "id",
+    "title",
+    "owasp_category",
+    "severity",
+    "sessions",
+    "assertions"
+  ],
+  "properties": {
+    "api_version": {
+      "type": "string",
+      "const": "canary-ci/v1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{3,63}$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5
+    },
+    "description": {
+      "type": "string"
+    },
+    "owasp_category": {
+      "type": "string",
+      "enum": [
+        "ASI01",
+        "ASI02",
+        "ASI03",
+        "ASI04",
+        "ASI05",
+        "ASI06",
+        "ASI07",
+        "ASI08",
+        "ASI09",
+        "ASI10"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"]
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["smoke", "full", "nightly"],
+      "default": "full"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "compliance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cwe": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "nist_ai_rmf": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "eu_ai_act": { "type": "array", "items": { "type": "string" }, "default": [] }
+      }
+    },
+    "trials": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "description": "Optional trial count for this scenario"
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_turns": { "type": "integer", "minimum": 1, "default": 15 },
+        "max_tool_calls": { "type": "integer", "minimum": 1, "default": 25 },
+        "max_identical_calls": { "type": "integer", "minimum": 2, "default": 4 },
+        "timeout_seconds": { "type": "number", "minimum": 1.0, "default": 60.0 }
+      }
+    },
+    "canaries": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "format_preset"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-zA-Z0-9_]+$" },
+          "kind": { "type": "string", "enum": ["secret", "data"] },
+          "format_preset": {
+            "type": "string",
+            "enum": [
+              "api_key_stripe",
+              "aws_access_key",
+              "bearer_jwt",
+              "env_token",
+              "pii_email",
+              "pii_ssn_tagged",
+              "confidential_code"
+            ]
+          },
+          "description": { "type": "string" },
+          "allowed_sinks": {
+            "type": "array",
+            "items": { "type": "string" },
+            "default": [],
+            "description": "Tool names or internal sink keys explicitly authorized to receive this canary"
+          }
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "env_vars": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "default": {}
+        },
+        "files": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "content"],
+            "properties": {
+              "path": { "type": "string" },
+              "content": { "type": "string" },
+              "trust_level": { "type": "string", "enum": ["trusted", "untrusted"], "default": "trusted" },
+              "protected": { "type": "boolean", "default": false }
+            }
+          }
+        },
+        "emails": { "type": "array", "items": { "type": "object" }, "default": [] },
+        "pull_requests": { "type": "array", "items": { "type": "object" }, "default": [] },
+        "issues": { "type": "array", "items": { "type": "object" }, "default": [] },
+        "tickets": { "type": "array", "items": { "type": "object" }, "default": [] },
+        "wiki_docs": { "type": "array", "items": { "type": "object" }, "default": [] },
+        "database": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_sql": { "type": "string" },
+            "seed_rows": { "type": "object" }
+          }
+        },
+        "mock_urls": { "type": "array", "items": { "type": "object" }, "default": [] },
+        "internal_domains": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["corp.internal"]
+        },
+        "enable_persistent_memory": { "type": "boolean", "default": false },
+        "custom_mock_profiles": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "tool_overrides": { "type": "array", "items": { "type": "object" }, "default": [] },
+        "rug_pulls": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tool_name", "trigger_after_calls"],
+            "properties": {
+              "tool_name": { "type": "string" },
+              "trigger_after_calls": { "type": "integer", "minimum": 1 },
+              "mutated_description": { "type": "string" },
+              "mutated_input_schema": { "type": "object" },
+              "injected_response_suffix": { "type": "string" }
+            }
+          }
+        },
+        "a2a_peers": { "type": "array", "items": { "type": "object" }, "default": [] },
+        "browser_pages": { "type": "array", "items": { "type": "object" }, "default": [] }
+      }
+    },
+    "sessions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "user_prompt"],
+        "properties": {
+          "id": { "type": "string" },
+          "user_prompt": { "type": "string" },
+          "system_prompt_hint": { "type": "string" },
+          "additional_files": { "type": "array", "items": { "type": "object" }, "default": [] }
+        }
+      }
+    },
+    "assertions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "forbid_canary_leak_in_agent_response": {
+          "type": "boolean",
+          "default": false,
+          "description": "Set true when final user output itself is an untrusted/lower-privilege boundary"
+        },
+        "task_completion": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "path", "equals"],
+            "properties": {
+              "id": {"type": "string", "pattern": "^[a-zA-Z0-9_-]+$"},
+              "path": {
+                "type": "array",
+                "minItems": 1,
+                "items": {"anyOf": [{"type": "string"}, {"type": "integer", "minimum": 0}]}
+              },
+              "equals": {},
+              "session_id": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "tripwires": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "description"],
+            "properties": {
+              "id": { "type": "string" },
+              "description": { "type": "string" },
+              "forbidden_tool": { "type": "string" },
+              "tool": { "type": "string" },
+              "argument_rules": {
+                "type": "array",
+                "default": [],
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["arg", "operator"],
+                  "properties": {
+                    "arg": { "type": "string" },
+                    "operator": {
+                      "type": "string",
+                      "enum": [
+                        "equals",
+                        "contains",
+                        "regex",
+                        "glob",
+                        "path_outside_workspace",
+                        "sql_destructive",
+                        "numeric_gt",
+                        "numeric_lt",
+                        "domain_not_in_allowlist"
+                      ]
+                    },
+                    "value": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "approval_policies": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tool_name", "must_disclose_fields"],
+            "properties": {
+              "tool_name": { "type": "string" },
+              "must_disclose_fields": { "type": "array", "items": { "type": "string" } },
+              "max_summary_chars": { "type": "integer", "default": 600 }
+            }
+          }
+        },
+        "forbid_poisoned_memory_persistence": {
+          "type": "boolean",
+          "default": false
+        },
+        "remediation_hint": {
+          "type": "string",
+          "default": "Enforce strict privilege separation between untrusted data ingestion and external egress sinks."
+        }
+      }
+    },
+    "scripted_replay": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Deterministic tool-call scripts used by ScriptedAdapter for offline testing",
+      "properties": {
+        "benign_steps": { "type": "array", "items": { "type": "object" }, "default": [] },
+        "compromised_steps": { "type": "array", "items": { "type": "object" }, "default": [] }
+      }
+    }
+  }
+}

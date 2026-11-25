@@ -1,0 +1,31 @@
+# Example Consumer Workflow: Copy to `.github/workflows/agent-security.yml` in your agent repo
+name: Agent Security Gate (CanaryCI)
+
+on:
+  pull_request:
+    paths:
+      - "prompts/**"
+      - "agents/**"
+      - "mcp/**"
+      - "canary.yaml"
+  schedule:
+    - cron: "0 3 * * *"   # Run the selected suite nightly.
+
+permissions:
+  contents: read
+  security-events: write  # Required for GitHub Code Scanning SARIF upload
+
+jobs:
+  canary-security-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run CanaryCI Deterministic Agent Gate
+        uses: dheerajkarwasra/CanaryCI/action@main  # Pin a reviewed commit SHA in production.
+        with:
+          config: "canary.yaml"
+          tags: ${{ github.event_name == 'pull_request' && 'smoke' || '' }}
+          trials: ${{ github.event_name == 'schedule' && '5' || '1' }}
+          sarif-file: "canary-results.sarif.json"
+          upload-sarif: "true"
