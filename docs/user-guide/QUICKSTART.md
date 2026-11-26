@@ -42,19 +42,30 @@ A missing measurement appears as an em dash in the table and `null` in JSON. A t
 
 ## Add the repository action
 
-For a checkout containing `action/action.yml`, put this workflow in `.github/workflows/agent-security.yml`.
+Run the demo against code from your own pull request. The starter includes a workflow, a config, a Python agent, and a scenario that requires the private note `reviewed` on ticket `T1`. The scenario also forbids a public reply. [Workflow](../../examples/ticket-check/pull-request.yml) · [Config](../../examples/ticket-check/canary.yaml) · [Agent](../../examples/ticket-check/support_agent.py) · [Scenario](../../examples/scenarios/support-task.yaml)
 
-```yaml
-name: Agent security
-on: [pull_request]
-permissions: {contents: read, security-events: write}
-jobs:
-  canary:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./action
-        with: {config: canary.yaml, tags: smoke}
+Start in a CanaryCI checkout. Set `target` to the local path of a fresh GitHub repository with an initial commit and Actions enabled. Copy the files into it and keep these paths. [Get a CanaryCI checkout](../../README.md#development)
+
+```bash
+target=/absolute/path/to/your-agent-repo
+mkdir -p "$target/.github/workflows" "$target/examples/ticket-check" "$target/examples/scenarios"
+cp examples/ticket-check/pull-request.yml "$target/.github/workflows/agent-security.yml"
+cp examples/ticket-check/canary.yaml examples/ticket-check/support_agent.py "$target/examples/ticket-check/"
+cp examples/scenarios/support-task.yaml "$target/examples/scenarios/"
 ```
 
-For another repository, use `dheerajkarwasra/CanaryCI/action` at a reviewed commit SHA. Run `canary-ci run --help` for CLI flags. [Consumer workflow](../../examples/github-workflow-pr-gate.yml) · [Action inputs and outputs](../../action/action.yml) · [Run exit codes](../../README.md#run-in-ci)
+1. Open a pull request with the four files. The **Verify the internal note on T1** job should pass. The Action installs CanaryCI from the v0.1.0 commit and runs the downstream agent on Python 3.12.
+2. In the same PR, open `support_agent.py`, change the note from `"reviewed"` to `"pending"`, and push. Open the failed workflow run’s **Summary**. Under **TASK INCOMPLETE**, look for `note_saved`, zero breaches, and `0/1` tasks completed. The gate exits with code `1`.
+3. Restore `"reviewed"` and push again. The summary shows **PASS**, zero breaches, and `1/1` tasks completed. The gate exits with code `0`.
+
+For a local run, install the wheel and use the same config from the downstream repository root. [Wheel install command](../../README.md#quickstart)
+
+```bash
+PYTHONPATH=examples/ticket-check canary-ci run --config examples/ticket-check/canary.yaml
+```
+
+To check your own agent, point `adapter.callable_path` at its entry point and set `PYTHONPATH` to its module directory. Keep the ticket scenario as the contract. For a larger suite, the scheduled workflow example runs smoke checks on relevant PRs and five trials per scenario each night. [Scheduled workflow](../../examples/github-workflow-pr-gate.yml)
+
+The starter needs only `contents: read` and writes its verdict to the Actions job summary. To opt into GitHub Code Scanning in a repository with that feature enabled, set `upload-sarif: "true"` and add `security-events: write` alongside `contents: read` in the workflow’s `permissions` block. [Action inputs and outputs](../../action/action.yml) · [Run exit codes](../../README.md#run-in-ci)
+
+Trying this for the first time? Tell us how long it took to find the failed assertion and which step, if any, held you up. [Share feedback on GitHub](https://github.com/dheerajkarwasra/CanaryCI/issues/new)

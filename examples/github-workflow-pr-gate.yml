@@ -13,19 +13,20 @@ on:
 
 permissions:
   contents: read
-  security-events: write  # Required for GitHub Code Scanning SARIF upload
 
 jobs:
   canary-security-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
       - name: Run CanaryCI Deterministic Agent Gate
-        uses: dheerajkarwasra/CanaryCI/action@main  # Pin a reviewed commit SHA in production.
+        uses: dheerajkarwasra/CanaryCI/action@d27b97d4f4cad301be714358cf04ece8a13ac40f # v0.1.0
         with:
           config: "canary.yaml"
           tags: ${{ github.event_name == 'pull_request' && 'smoke' || '' }}
           trials: ${{ github.event_name == 'schedule' && '5' || '1' }}
           sarif-file: "canary-results.sarif.json"
-          upload-sarif: "true"
+          upload-sarif: "false"
