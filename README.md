@@ -2,6 +2,8 @@
 
 CanaryCI tests whether a tool-using AI agent can complete its assigned task while respecting security policy. Run it locally or in CI after changing a prompt, model, tool, or policy. It evaluates recorded actions and fixture state with deterministic assertions.
 
+**Both versions of the ticket agent replied “Done.”** The first left the ticket untouched. The fix saved the requested internal note. The same CI check verified both outcomes, with zero security breaches in either run. [See the failing and passing checks in PR #1](https://github.com/dheerajkarwasra/CanaryCI/pull/1).
+
 - **Exercise realistic tasks.** Run 40 built-in scenarios across all ten OWASP Agentic Top 10 categories, or define your own scenarios and mock tools in YAML.
 - **Trace a failure.** Each trial gets an isolated workspace and traceable synthetic values. A recorded trace shows which tool call, response, or state change triggered a finding. Replay it offline or pin it as a regression test.
 - **Compare agent versions.** Measure breach rates over repeated trials. Compare security outcomes, task completion, average latency, and reported token use against a baseline.
