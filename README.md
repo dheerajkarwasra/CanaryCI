@@ -2,7 +2,9 @@
 
 CanaryCI tests whether a tool-using AI agent can complete its assigned task while respecting security policy. Run it locally or in CI after changing a prompt, model, tool, or policy. It evaluates recorded actions and fixture state with deterministic assertions.
 
-**Both versions of the ticket agent replied “Done.”** The first left the ticket untouched. The fix saved the requested internal note. The same CI check verified both outcomes, with zero security breaches in either run. [See the failing and passing checks in PR #1](https://github.com/dheerajkarwasra/CanaryCI/pull/1).
+**Both versions of the ticket agent replied “Done.”** The first left the ticket untouched. The fix saved the requested internal note. The 15-second demo shows the CLI results and trace details from both runs. Each recorded zero security breaches. [See the failing and passing checks in PR #1](https://github.com/dheerajkarwasra/CanaryCI/pull/1).
+
+![Terminal recording of the ticket check failing when the internal note is missing and passing after the agent saves it.](docs/media/ticket-check.gif)
 
 - **Exercise realistic tasks.** Run 40 built-in scenarios across all ten OWASP Agentic Top 10 categories, or define your own scenarios and mock tools in YAML.
 - **Trace a failure.** Each trial gets an isolated workspace and traceable synthetic values. A recorded trace shows which tool call, response, or state change triggered a finding. Replay it offline or pin it as a regression test.
@@ -11,31 +13,23 @@ CanaryCI tests whether a tool-using AI agent can complete its assigned task whil
 
 ## Quickstart
 
-Use Python 3.12 or later and `uv`. Clone the repository, or start in the root of an existing checkout.
+Install CanaryCI 0.1.0 in a Python 3.12+ environment using the wheel from GitHub Releases.
 
 ```bash
-git clone https://github.com/dheerajkarwasra/CanaryCI.git
-cd CanaryCI
+python -m pip install "https://github.com/dheerajkarwasra/CanaryCI/releases/download/v0.1.0/canary_ci-0.1.0-py3-none-any.whl"
 ```
 
-Run the demo from source in a temporary directory. The first invocation can download dependencies. The scripted agent and fixture tools run offline without provider credentials.
+In an empty directory, initialize the demo and run the benign agent. All eight smoke scenarios pass with exit code `0`. The scripted agents and fixtures run offline without provider credentials.
 
 ```bash
-canary_source="$PWD"
-cd "$(mktemp -d)"
-uvx --from "$canary_source" canary-ci init --demo
+canary-ci init --demo
+canary-ci run --config canary.demo.yaml --adapter-mode benign
 ```
 
-Run the compromised fixture. It deliberately triggers findings in all eight smoke scenarios and exits with code `1`.
+Run the same scenarios with the demo’s default compromised agent. It triggers findings in all eight scenarios and exits with code `1`.
 
 ```bash
-uvx --from "$canary_source" canary-ci run --config canary.demo.yaml
-```
-
-Run the same scenarios with the benign fixture. This run exits with code `0`.
-
-```bash
-uvx --from "$canary_source" canary-ci run --config canary.demo.yaml --adapter-mode benign
+canary-ci run --config canary.demo.yaml
 ```
 
 Each run saves JSONL traces, `summary.json`, and `results.sarif.json` under `.canary/runs/<run-id>/`. The terminal report shows the source, agent turn, and destination of a disclosure when the trace records them.
@@ -65,7 +59,7 @@ uv run canary-ci run --config examples/canary.yaml \
 
 ## CLI reference
 
-Run these commands with `uv run canary-ci` from the checkout, or with the `uvx` prefix used in the demo. Add `--help` to any command to see its options.
+Run these commands with `canary-ci` after installing the wheel, or with `uv run canary-ci` from the checkout. Add `--help` to any command to see its options.
 
 | Command | Use |
 | --- | --- |
@@ -86,6 +80,13 @@ Run these commands with `uv run canary-ci` from the checkout, or with the `uvx` 
 - Compare policy outcomes, latency, and token use across runs. [Baseline comparisons](docs/user-guide/QUICKSTART.md#compare-two-runs)
 
 ## Development
+
+Clone the repository to run the examples or work on CanaryCI. The development commands use `uv` and Python 3.12 or later.
+
+```bash
+git clone https://github.com/dheerajkarwasra/CanaryCI.git
+cd CanaryCI
+```
 
 Run these checks from the repository root. The offline suite uses scripted agents and local fixtures, including bounded Hypothesis tests for replay and credential redaction.
 
