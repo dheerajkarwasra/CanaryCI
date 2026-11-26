@@ -6,6 +6,8 @@ CanaryCI tests whether a tool-using AI agent can complete its assigned task whil
 
 ![Terminal recording of the ticket check failing when the internal note is missing and passing after the agent saves it.](docs/media/ticket-check.gif)
 
+Try the same check on a pull request in your own repository. The starter runs on synthetic tickets and needs no provider credentials. [Copy the support-ticket workflow](docs/user-guide/QUICKSTART.md#add-the-repository-action).
+
 - **Exercise realistic tasks.** Run 40 built-in scenarios across all ten OWASP Agentic Top 10 categories, or define your own scenarios and mock tools in YAML.
 - **Trace a failure.** Each trial gets an isolated workspace and traceable synthetic values. A recorded trace shows which tool call, response, or state change triggered a finding. Replay it offline or pin it as a regression test.
 - **Compare agent versions.** Measure breach rates over repeated trials. Compare security outcomes, task completion, average latency, and reported token use against a baseline.

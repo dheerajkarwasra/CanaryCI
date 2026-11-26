@@ -1,0 +1,24 @@
+name: Support ticket check
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ticket:
+    name: Verify the internal note on T1
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - uses: dheerajkarwasra/CanaryCI/action@d27b97d4f4cad301be714358cf04ece8a13ac40f # v0.1.0
+        env:
+          PYTHONPATH: ${{ github.workspace }}/examples/ticket-check
+          UV_PYTHON: "3.12"
+        with:
+          config: examples/ticket-check/canary.yaml
+          upload-sarif: "false"
