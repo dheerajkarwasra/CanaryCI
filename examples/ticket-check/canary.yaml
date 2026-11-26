@@ -1,0 +1,6 @@
+version: "1"
+adapter:
+  kind: python
+  callable_path: support_agent:run
+scenario_paths:
+  - examples/scenarios/support-task.yaml
